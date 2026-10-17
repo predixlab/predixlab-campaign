@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "predixlab-campaign"
+version = "0.1.0"
+description = "PredixLab opt-in marketing campaign Azure Function"
+license = {file = "LICENSE"}
+requires-python = ">=3.12"
+dependencies = [
+  "azure-functions",
+  "azure-storage-queue",
+  "azure-communication-email",
+  "pymongo",
+  "pydantic>=2,<3",
+  "itsdangerous",
+  "Jinja2>=3,<4",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.setuptools.package-data]
+predixlab_campaign = [
+  "template_assets/email/en/*.html",
+  "template_assets/email/en/*.txt",
+  "template_assets/email/zh/*.html",
+  "template_assets/email/zh/*.txt",
+]

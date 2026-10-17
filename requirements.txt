@@ -1,0 +1,7 @@
+azure-functions
+azure-storage-queue
+azure-communication-email
+pymongo
+pydantic>=2,<3
+itsdangerous
+Jinja2>=3,<4

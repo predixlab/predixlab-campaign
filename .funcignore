@@ -1,0 +1,9 @@
+.git*
+.github/
+.pytest_cache/
+.venv/
+__pycache__/
+tests/
+local.settings.json
+local.settings.json.example
+uv.lock

@@ -1,0 +1,23 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "CAMPAIGN_EVENTS_QUEUE": "campaign-events",
+    "CAMPAIGN_DELIVERY_QUEUE": "campaign-delivery",
+    "CAMPAIGN_DELIVERY_BACKEND": "console",
+    "ACS_CONNECTION_STRING": "",
+    "ACS_SENDER": "no-reply@example.com",
+    "MONGODB_URL": "mongodb://localhost:27017",
+    "DATABASE_NAME": "predixlab",
+    "USERS_COLLECTION": "users",
+    "PIVOT_PICKS_COLLECTION": "pivot_picks",
+    "ALPHARANK_COLLECTION": "alpharank",
+    "ALPHARANK_GENERATIONS_COLLECTION": "alpharank_generations",
+    "CAMPAIGN_DELIVERIES_COLLECTION": "campaign_deliveries",
+    "CAMPAIGN_APP_NAME": "PredixLab",
+    "PUBLIC_API_URL": "https://api.predixlab.com",
+    "SECRET_KEY": "replace-me",
+    "CAMPAIGN_DELIVERY_LEASE_SECONDS": "300"
+  }
+}

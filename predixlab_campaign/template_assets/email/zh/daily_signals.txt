@@ -1,0 +1,31 @@
+{{ greeting }}
+{{ intro }}
+
+{{ summary_title }}
+{% for row in summary_rows -%}
+- {{ row.label }}：{{ row.value }}
+{% endfor %}
+
+{{ alpha_title }}
+{% if has_alpha -%}
+{% for item in alpha_rank -%}
+- #{{ item.rank }} {{ item.symbol }} | 评分={{ item.score }}
+{% endfor %}
+{% else -%}
+{{ alpha_empty }}
+{% endif %}
+
+{{ pivot_title }}
+{% if has_pivot -%}
+{% for group in pivot_groups if group['items'] -%}
+{{ group.title }}
+{% for item in group['items'] -%}
+- #{{ item.rank }} {{ item.symbol }} | 置信度={{ item.confidence }}
+{% endfor -%}
+{% endfor -%}
+{% else -%}
+{{ pivot_empty }}
+{% endif %}
+
+{{ disclaimer }}
+{{ unsubscribe_label }}：{{ unsubscribe_url }}
