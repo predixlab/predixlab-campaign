@@ -30,9 +30,10 @@ cp local.settings.json.example local.settings.json
 
 Edit that ignored file before starting the host. Keep
 `CAMPAIGN_DELIVERY_BACKEND=console`, use only synthetic recipients and isolated
-queues, set `PUBLIC_API_URL` to your local API, and replace `SECRET_KEY` with
-the same strong JWT/unsubscribe signing key used by that API. Do not confuse it
-with the API's independent OAuth `SESSION_SECRET_KEY`.
+queues, and set `PUBLIC_API_URL` to your local API. Set `UNSUBSCRIBE_SECRET` to
+the same strong unsubscribe signing key used by that API. If it is unset or
+empty, signing falls back to `SECRET_KEY`, which must match the API's key.
+Neither key is the API's independent OAuth `SESSION_SECRET_KEY`.
 
 ```bash
 uv run func start
@@ -110,7 +111,7 @@ data raises an error so Azure Queue retry handling can retry the campaign.
 The digest follows the dashboard list scope and presentation order:
 
 - AlphaRank: top 15 rank, symbol, score.
-- Pivot: bullish/bearish grouping, position, symbol, confidence.
+- Pivot: bullish/bearish grouping, position, symbol, score.
 
 Model internals and unpublished event types are not included.
 
@@ -127,6 +128,15 @@ Missing `daily_signals_email_enabled` defaults to enabled for premium/admin
 users. This preference is independent of general marketing email consent.
 Every delivery includes a Daily Signals-specific unsubscribe URL plus
 `List-Unsubscribe` and `List-Unsubscribe-Post` headers.
+
+Links use timestamped signatures with the existing Daily Signals salt and
+`user_id`/`language` payload. Before using this campaign signer, the API verifier
+must implement the shared token specification: accept both `SECRET_KEY` and
+`UNSUBSCRIBE_SECRET` (skipping empty values and duplicates) with
+`URLSafeTimedSerializer` and a maximum age of 365 days (`365 * 24 * 3600`
+seconds). Expired timed tokens must be rejected without a legacy retry.
+Only other signature/data failures may temporarily fall back to the legacy
+`URLSafeSerializer` with `SECRET_KEY` so previously sent links keep working.
 
 ## Environment variables
 
@@ -146,7 +156,9 @@ Every delivery includes a Daily Signals-specific unsubscribe URL plus
 - `ALPHARANK_COLLECTION` (default `alpharank`)
 - `ALPHARANK_GENERATIONS_COLLECTION` (default `alpharank_generations`)
 - `PUBLIC_API_URL`
-- `SECRET_KEY`
+- `SECRET_KEY` (fallback unsubscribe signing key, shared with the API)
+- `UNSUBSCRIBE_SECRET` (dedicated unsubscribe signing key, shared with the API;
+  falls back to `SECRET_KEY` when unset or empty)
 
 Use `CAMPAIGN_DELIVERY_BACKEND=console` for local rendering without ACS.
 
@@ -164,6 +176,18 @@ repository to the production `predixlab-campaign` Azure Function App using
 GitHub OIDC and an Azure identity scoped to that Function App. The deploy job
 builds `.python_packages` on the Linux runner before publishing so the
 run-from-package artifact contains all production dependencies.
+
+Production installs use the exact versions and hashes exported from `uv.lock`
+to `requirements.txt`; CI checks that the export stays in sync. After changing
+production dependencies, regenerate the file (without the test extra):
+
+```bash
+uv lock --check
+uv export --frozen --no-dev --no-emit-project --format requirements-txt > requirements.txt
+```
+
+Dependabot checks uv dependencies and GitHub Actions weekly, grouping minor and
+patch updates within each ecosystem.
 
 ## Contributing and support
 

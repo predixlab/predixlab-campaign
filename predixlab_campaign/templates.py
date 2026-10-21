@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Mapping
 from urllib.parse import quote
 
-from itsdangerous import URLSafeSerializer
+from itsdangerous import URLSafeTimedSerializer
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from .config import Settings
@@ -31,7 +31,7 @@ _TEXTS = {
         'pivot_empty': 'No Pivot signals for this session.',
         'pivot_symbol': 'Symbol',
         'pivot_rank': 'Rank',
-        'pivot_confidence': 'Confidence',
+        'pivot_score': 'Score',
         'alpha_rank_label': 'Rank',
         'alpha_symbol': 'Ticker',
         'alpha_score': 'Score',
@@ -57,7 +57,7 @@ _TEXTS = {
         'pivot_empty': '当日无 Pivot 信号。',
         'pivot_symbol': '代码',
         'pivot_rank': '排名',
-        'pivot_confidence': '置信度',
+        'pivot_score': '评分',
         'alpha_rank_label': '排名',
         'alpha_symbol': '代码',
         'alpha_score': '评分',
@@ -102,7 +102,10 @@ def build_unsubscribe_url(
     language: str,
 ) -> str:
     """Build the API-compatible Daily Signals unsubscribe URL."""
-    serializer = URLSafeSerializer(settings.secret_key, salt=_UNSUBSCRIBE_SALT)
+    serializer = URLSafeTimedSerializer(
+        settings.unsubscribe_secret or settings.secret_key,
+        salt=_UNSUBSCRIBE_SALT,
+    )
     token = serializer.dumps({'user_id': user_id, 'language': language})
     base = settings.public_api_url.rstrip('/')
     return (
@@ -171,7 +174,7 @@ def _render_daily_signals(
         'pivot_headers': [
             text_map['pivot_rank'],
             text_map['pivot_symbol'],
-            text_map['pivot_confidence'],
+            text_map['pivot_score'],
         ],
         'pivot_groups': [
             _pivot_group(
@@ -241,7 +244,7 @@ def _pivot_group(
             {
                 'rank': str(position),
                 'symbol': pick.symbol,
-                'confidence': _format_ratio_as_percent(pick.confidence, 0),
+                'score': _format_ratio_as_percent(pick.confidence, 0),
             }
             for position, pick in enumerate(visible, start=1)
         ],

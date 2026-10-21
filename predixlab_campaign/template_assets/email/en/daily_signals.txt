@@ -20,7 +20,7 @@
 {% for group in pivot_groups if group['items'] -%}
 {{ group.title }}
 {% for item in group['items'] -%}
-- #{{ item.rank }} {{ item.symbol }} | confidence={{ item.confidence }}
+- #{{ item.rank }} {{ item.symbol }} | score={{ item.score }}
 {% endfor -%}
 {% endfor -%}
 {% else -%}

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from urllib.parse import parse_qs, urlparse
 
-from itsdangerous import URLSafeSerializer
+import pytest
+from itsdangerous import URLSafeTimedSerializer
 
 from predixlab_campaign.contracts import parse_delivery_event
 from predixlab_campaign.templates import render_campaign
@@ -37,6 +38,8 @@ def test_daily_signals_renders_dashboard_scope_and_unsubscribe_headers(
         'Predicted excess return',
         'Top 20 probability',
         'campaign_id',
+        'Confidence',
+        'confidence=',
     ]:
         assert hidden not in rendered.html
         assert hidden not in rendered.text
@@ -93,8 +96,40 @@ def test_daily_signals_renders_chinese_and_api_compatible_unsubscribe(
         '/api/v1/user/email/daily-signals/unsubscribe'
     )
     token = parse_qs(urlparse(unsubscribe_url).query)['token'][0]
-    payload = URLSafeSerializer(
-        settings.secret_key,
+    payload = URLSafeTimedSerializer(
+        settings.unsubscribe_secret or settings.secret_key,
         salt='predixlab-daily-signals-email-unsubscribe',
-    ).loads(token)
+    ).loads(token, max_age=365 * 24 * 3600)
     assert payload == {'user_id': 'u-1', 'language': 'zh'}
+
+
+@pytest.mark.parametrize(
+    ('locale', 'header', 'label'),
+    [('en', 'Score', 'score'), ('zh', '评分', '评分')],
+)
+def test_daily_signals_uses_score_labels_without_changing_values(
+    settings,
+    daily_delivery_payload: dict,
+    locale: str,
+    header: str,
+    label: str,
+) -> None:
+    daily_delivery_payload['recipient']['locale'] = locale
+
+    rendered = render_campaign(
+        parse_delivery_event(daily_delivery_payload),
+        settings,
+    )
+
+    assert rendered.html.count(f'>{header}</th>') == 3
+    for pick in [
+        f'AAPL | {label}=77%',
+        f'NVDA | {label}=69%',
+        f'TSLA | {label}=66%',
+        f'NVDA | {label}=93.4',
+        f'MSFT | {label}=90.1',
+    ]:
+        assert pick in rendered.text
+    for old_label in ['Confidence', 'confidence=', '置信度']:
+        assert old_label not in rendered.html
+        assert old_label not in rendered.text
