@@ -244,7 +244,7 @@ def _pivot_group(
             {
                 'rank': str(position),
                 'symbol': pick.symbol,
-                'score': _format_ratio_as_percent(pick.confidence, 0),
+                'score': _format_number(pick.confidence * 100, 1),
             }
             for position, pick in enumerate(visible, start=1)
         ],
@@ -277,9 +277,3 @@ def _format_number(value: float | None, decimals: int) -> str:
     if value is None:
         return '—'
     return f'{value:,.{decimals}f}'
-
-
-def _format_ratio_as_percent(value: float | None, decimals: int) -> str:
-    if value is None:
-        return '—'
-    return f'{value * 100:,.{decimals}f}%'

@@ -177,17 +177,25 @@ GitHub OIDC and an Azure identity scoped to that Function App. The deploy job
 builds `.python_packages` on the Linux runner before publishing so the
 run-from-package artifact contains all production dependencies.
 
+### Dependency updates / Dependabot
+
 Production installs use the exact versions and hashes exported from `uv.lock`
-to `requirements.txt`; CI checks that the export stays in sync. After changing
-production dependencies, regenerate the file (without the test extra):
+to `requirements.txt`; CI checks that the export stays in sync. Dependabot checks
+uv dependencies and GitHub Actions weekly, grouping minor and patch updates
+within each ecosystem.
+
+Dependabot uv pull requests update `uv.lock` but do not regenerate
+`requirements.txt`. After any lockfile update, including a Dependabot update,
+regenerate the production export (without the test extra) from the repository root:
 
 ```bash
 uv lock --check
 uv export --frozen --no-dev --no-emit-project --format requirements-txt > requirements.txt
 ```
 
-Dependabot checks uv dependencies and GitHub Actions weekly, grouping minor and
-patch updates within each ecosystem.
+Commit `requirements.txt` alongside the lockfile update if the export changes.
+CI prints the regeneration command when the drift check fails; it does not push
+commits or require write permissions.
 
 ## Contributing and support
 

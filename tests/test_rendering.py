@@ -27,7 +27,7 @@ def test_daily_signals_renders_dashboard_scope_and_unsubscribe_headers(
         'AAPL',
         'TSLA',
         'NVDA',
-        '77%',
+        '77.1',
         '93.4',
     ]:
         assert visible in rendered.html
@@ -107,7 +107,7 @@ def test_daily_signals_renders_chinese_and_api_compatible_unsubscribe(
     ('locale', 'header', 'label'),
     [('en', 'Score', 'score'), ('zh', '评分', '评分')],
 )
-def test_daily_signals_uses_score_labels_without_changing_values(
+def test_daily_signals_uses_consistent_score_labels_and_values(
     settings,
     daily_delivery_payload: dict,
     locale: str,
@@ -122,14 +122,55 @@ def test_daily_signals_uses_score_labels_without_changing_values(
     )
 
     assert rendered.html.count(f'>{header}</th>') == 3
-    for pick in [
-        f'AAPL | {label}=77%',
-        f'NVDA | {label}=69%',
-        f'TSLA | {label}=66%',
-        f'NVDA | {label}=93.4',
-        f'MSFT | {label}=90.1',
+    for symbol, score in [
+        ('AAPL', '77.1'),
+        ('NVDA', '68.9'),
+        ('TSLA', '66.5'),
+        ('NVDA', '93.4'),
+        ('MSFT', '90.1'),
     ]:
-        assert pick in rendered.text
+        assert f'{symbol} | {label}={score}\n' in rendered.text
+        assert f'>{score}</td>' in rendered.html
+        assert f'>{score}%' not in rendered.html
+    assert '%' not in rendered.text
     for old_label in ['Confidence', 'confidence=', '置信度']:
         assert old_label not in rendered.html
         assert old_label not in rendered.text
+
+
+@pytest.mark.parametrize(
+    ('locale', 'label'),
+    [('en', 'score'), ('zh', '评分')],
+)
+@pytest.mark.parametrize(
+    ('value', 'expected'),
+    [
+        (0, '0.0'),
+        (0.5, '50.0'),
+        (0.12345, '12.3'),
+        (0.9996, '100.0'),
+        (1, '100.0'),
+    ],
+)
+def test_daily_signals_formats_all_scores_on_a_one_decimal_100_point_scale(
+    settings,
+    daily_delivery_payload: dict,
+    locale: str,
+    label: str,
+    value: float,
+    expected: str,
+) -> None:
+    daily_delivery_payload['recipient']['locale'] = locale
+    for pick in daily_delivery_payload['digest']['pivot_picks']:
+        pick['confidence'] = value
+    for entry in daily_delivery_payload['digest']['alpha_rank']:
+        entry['score'] = value
+
+    rendered = render_campaign(
+        parse_delivery_event(daily_delivery_payload),
+        settings,
+    )
+
+    assert rendered.html.count(f'>{expected}</td>') == 5
+    assert rendered.text.count(f'{label}={expected}\n') == 5
+    assert '%' not in rendered.text
