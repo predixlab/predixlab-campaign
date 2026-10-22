@@ -12,14 +12,14 @@ dependencies = [
   "azure-functions",
   "azure-storage-queue",
   "azure-communication-email",
-  "pymongo",
+  "pymongo>=4.18.2",
   "pydantic>=2,<3",
   "itsdangerous",
   "Jinja2>=3,<4",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=8,<9"]
+test = ["pytest>=9.1.1,<10"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

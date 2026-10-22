@@ -33,6 +33,25 @@ uv run python -m pytest
 
 Mock queues, MongoDB, and ACS. Test consent, unsubscribe behavior, idempotency, delivery leases, and malformed messages. Use the console backend for local rendering; never send test mail to real customers.
 
+## Dependency updates / Dependabot
+
+`uv.lock` is the source of locked dependencies. Production installs use
+`requirements.txt`, exported with hashes and without the test extra. After
+changing dependencies, update the lockfile with `uv lock`.
+
+Dependabot uv pull requests update `uv.lock` but not `requirements.txt`. After
+any lockfile update, run the same production export that CI checks, from the
+repository root:
+
+```bash
+uv lock --check
+uv export --frozen --no-dev --no-emit-project --format requirements-txt > requirements.txt
+```
+
+Commit `requirements.txt` with the lockfile update if the export changes, and
+run the tests above. CI prints this regeneration command on export drift; it
+does not push commits or need write permissions.
+
 ## Pull requests
 
 CI retains Python 3.12 for Azure Functions compatibility and uses uv 0.13.1 for

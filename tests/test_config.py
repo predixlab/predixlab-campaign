@@ -24,6 +24,28 @@ def test_settings_use_campaign_specific_environment(monkeypatch) -> None:
     assert settings.delivery_lease_seconds == 120
 
 
+@pytest.mark.parametrize(
+    'unsubscribe_secret',
+    [None, '', 'unsubscribe-test-secret'],
+)
+def test_settings_load_unsubscribe_secret_with_fallback(
+    monkeypatch,
+    unsubscribe_secret: str | None,
+) -> None:
+    monkeypatch.setenv('SECRET_KEY', 'api-test-secret')
+    if unsubscribe_secret is None:
+        monkeypatch.delenv('UNSUBSCRIBE_SECRET', raising=False)
+    else:
+        monkeypatch.setenv('UNSUBSCRIBE_SECRET', unsubscribe_secret)
+
+    settings = Settings.from_env()
+
+    assert settings.secret_key == 'api-test-secret'
+    assert settings.unsubscribe_secret == (
+        unsubscribe_secret or 'api-test-secret'
+    )
+
+
 @pytest.mark.parametrize('lease_seconds', ['0', '-1'])
 def test_settings_reject_non_positive_delivery_lease(
     monkeypatch,

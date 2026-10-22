@@ -18,6 +18,7 @@
     "CAMPAIGN_APP_NAME": "PredixLab",
     "PUBLIC_API_URL": "https://api.predixlab.com",
     "SECRET_KEY": "replace-me",
+    "UNSUBSCRIBE_SECRET": "",
     "CAMPAIGN_DELIVERY_LEASE_SECONDS": "300"
   }
 }

@@ -26,6 +26,7 @@ class Settings:
     public_api_url: str
     secret_key: str
     delivery_lease_seconds: int = 300
+    unsubscribe_secret: str = ''
 
     @classmethod
     def from_env(cls) -> 'Settings':
@@ -35,6 +36,7 @@ class Settings:
             raise ValueError(
                 'CAMPAIGN_DELIVERY_LEASE_SECONDS must be greater than zero'
             )
+        secret_key = os.getenv('SECRET_KEY', '')
         return cls(
             storage_connection_string=os.getenv('AzureWebJobsStorage', ''),
             campaign_events_queue=os.getenv(
@@ -71,8 +73,9 @@ class Settings:
             ),
             app_name=os.getenv('CAMPAIGN_APP_NAME', 'PredixLab'),
             public_api_url=os.getenv('PUBLIC_API_URL', ''),
-            secret_key=os.getenv('SECRET_KEY', ''),
+            secret_key=secret_key,
             delivery_lease_seconds=lease_seconds,
+            unsubscribe_secret=os.getenv('UNSUBSCRIBE_SECRET', '') or secret_key,
         )
 
 
